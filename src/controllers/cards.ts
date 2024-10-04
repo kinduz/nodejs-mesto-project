@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
+import { DEFAULT_ERROR_CODE, INVALID_DATA_ERROR_CODE, NOT_FOUND_ERROR_CODE } from '../shared/errors-codes';
 import Card from '../models/card';
-
-const INVALID_DATA_ERROR_CODE = 400;
-const NOT_FOUND_ERROR_CODE = 404;
-const DEFAULT_ERROR_CODE = 500;
 
 export const getCards = (req: Request, res: Response) => {
   Card.find({})
@@ -31,7 +28,7 @@ export const deleteCard = (req: Request, res: Response) => {
       }
       return res.send({ card });
     })
-    .catch(() => res.status(500).send({ message: 'Ошибка по умолчанию' }));
+    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию' }));
 };
 
 export const likeCard = (req: Request, res: Response) => {

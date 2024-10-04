@@ -1,9 +1,6 @@
 import { Request, Response } from 'express';
+import { DEFAULT_ERROR_CODE, INVALID_DATA_ERROR_CODE, NOT_FOUND_ERROR_CODE } from '../shared/errors-codes';
 import User from '../models/user';
-
-const INVALID_DATA_ERROR_CODE = 400;
-const NOT_FOUND_ERROR_CODE = 404;
-const DEFAULT_ERROR_CODE = 500;
 
 export const getUsers = (req: Request, res: Response) => {
   User.find({})
@@ -37,7 +34,7 @@ export const createUser = (req: Request, res: Response) => {
 
 export const updateUser = (req: Request, res: Response) => {
   const { name, about } = req.body;
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь с указанным _id не найден' });
@@ -54,7 +51,7 @@ export const updateUser = (req: Request, res: Response) => {
 
 export const updateAvatar = (req: Request, res: Response) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
         return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь с указанным _id не найден' });
