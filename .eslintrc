@@ -30,6 +30,10 @@
       ]
   },
   "rules": {
+      "max-len": "off",
+      "no-useless-escape": "off",
+      "import/prefer-default-export": "off",
+      "consistent-return": "off",
       "no-underscore-dangle": "off",
       "import/extensions": [
           "error",

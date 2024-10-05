@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { urlValidationRegExp } from '../shared';
 
 interface ICard {
   name: string;
@@ -18,6 +19,12 @@ const cardSchema = new mongoose.Schema<ICard>({
   link: {
     type: String,
     required: true,
+    validate: {
+      validator(v) {
+        return urlValidationRegExp.test(v);
+      },
+      message: (props) => `${props.value} не является корректной ссылкой`,
+    },
   },
   owner: {
     type: mongoose.Schema.Types.ObjectId,

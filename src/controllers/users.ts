@@ -1,67 +1,76 @@
-import { Request, Response } from 'express';
-import { DEFAULT_ERROR_CODE, INVALID_DATA_ERROR_CODE, NOT_FOUND_ERROR_CODE } from '../shared/errors-codes';
+import { NextFunction, Request, Response } from 'express';
+import {
+  AppError,
+  DEFAULT_ERROR_CODE, DEFAULT_ERROR_MESSAGE, FORBIDDEN_ERROR_CODE, INVALID_DATA_ERROR_CODE, NOT_FOUND_ERROR_CODE,
+} from '../shared';
 import User from '../models/user';
 
-export const getUsers = (req: Request, res: Response) => {
+export const getUsers = (req: Request, res: Response, next: NextFunction) => {
   User.find({})
     .then((users) => res.send({ users }))
-    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию' }));
+    .catch(() => next(new AppError(DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE)));
 };
-
-export const getCurrentUser = (req: Request, res: Response) => {
+export const getCurrentUser = (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
   User.findById(userId)
     .then((user) => {
       if (!user) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь по указанному _id не найден' });
+        next(new AppError('Пользователь по указанному _id не найден', NOT_FOUND_ERROR_CODE));
       }
       return res.send({ user });
     })
-    .catch(() => res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию' }));
+    .catch(() => next(new AppError(DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE)));
 };
 
-export const createUser = (req: Request, res: Response) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
-    .then((user) => res.send({ user }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res.status(INVALID_DATA_ERROR_CODE).send({ message: 'Переданы некорректные данные при создании пользователя' });
+export const getUserInfo = (req: Request, res: Response, next: NextFunction) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        next(new AppError('Пользователь не найден', NOT_FOUND_ERROR_CODE));
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
-    });
+      return res.send({ user });
+    })
+    .catch(() => next(new AppError(DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE)));
 };
-
-export const updateUser = (req: Request, res: Response) => {
+export const updateUser = (req: Request, res: Response, next: NextFunction) => {
   const { name, about } = req.body;
+
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
     .then((user) => {
       if (!user) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь с указанным _id не найден' });
+        next(new AppError('Пользователь с указанным _id не найден', NOT_FOUND_ERROR_CODE));
+        return;
+      }
+      if (user._id !== req.user._id) {
+        next(new AppError('Нет прав для редактирования пользователя', FORBIDDEN_ERROR_CODE));
       }
       return res.send({ user });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(INVALID_DATA_ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        next(new AppError('Переданы некорректные данные при обновлении профиля', INVALID_DATA_ERROR_CODE));
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
+      next(new AppError(DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE));
     });
 };
 
-export const updateAvatar = (req: Request, res: Response) => {
+export const updateAvatar = (req: Request, res: Response, next: NextFunction) => {
   const { avatar } = req.body;
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true })
     .then((user) => {
       if (!user) {
-        return res.status(NOT_FOUND_ERROR_CODE).send({ message: 'Пользователь с указанным _id не найден' });
+        next(new AppError('Пользователь с указанным _id не найден', NOT_FOUND_ERROR_CODE));
+        return;
+      }
+      if (user._id !== req.user._id) {
+        next(new AppError('Нет прав для редактирования пользователя', FORBIDDEN_ERROR_CODE));
       }
       return res.send({ user });
     })
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(INVALID_DATA_ERROR_CODE).send({ message: 'Переданы некорректные данные при обновлении аватара' });
+        next(new AppError('Переданы некорректные данные при обновлении аватара', INVALID_DATA_ERROR_CODE));
       }
-      return res.status(DEFAULT_ERROR_CODE).send({ message: 'Ошибка по умолчанию' });
+      next(new AppError(DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE));
     });
 };
