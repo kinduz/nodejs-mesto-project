@@ -1,0 +1,1 @@
+export const SUCCESS_CREATE_STATUS = 201;

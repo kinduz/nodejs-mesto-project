@@ -7,9 +7,10 @@ import {
   DEFAULT_ERROR_CODE, UNAUTHORIZED_ERROR_CODE, DEFAULT_ERROR_MESSAGE, AppError,
   INVALID_DATA_ERROR_CODE,
   DUPLICATE_ERROR_CODE,
+  SUCCESS_CREATE_STATUS,
 } from '../shared';
 
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET = 'jwt_secret' } = process.env;
 
 export const login = (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body;
@@ -26,7 +27,7 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
           if (!matched) {
             next(new AppError('Неправильные почта или пароль', UNAUTHORIZED_ERROR_CODE));
           }
-          const token = jwt.sign({ _id: user._id }, JWT_SECRET as string, { expiresIn: '7d' });
+          const token = jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '7d' });
 
           res.cookie('token', token, {
             httpOnly: true,
@@ -53,8 +54,11 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
       avatar,
       email,
       password: hash,
-    }))
-    .then((user) => res.send({ user }))
+    })
+    .then((user) => {
+      const {password, ...userData} = user.toObject();
+      res.status(SUCCESS_CREATE_STATUS).send({ user: userData })
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new AppError('Переданы некорректные данные при создании пользователя', INVALID_DATA_ERROR_CODE));
@@ -63,5 +67,5 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
         next(new AppError('Пользователь с таким email уже существует', DUPLICATE_ERROR_CODE));
       }
       return next(new AppError(DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE));
-    });
+    }));
 };

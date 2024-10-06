@@ -10,6 +10,7 @@ export const getUsers = (req: Request, res: Response, next: NextFunction) => {
     .then((users) => res.send({ users }))
     .catch(() => next(new AppError(DEFAULT_ERROR_MESSAGE, DEFAULT_ERROR_CODE)));
 };
+
 export const getCurrentUser = (req: Request, res: Response, next: NextFunction) => {
   const { userId } = req.params;
   User.findById(userId)
@@ -62,7 +63,7 @@ export const updateAvatar = (req: Request, res: Response, next: NextFunction) =>
         next(new AppError('Пользователь с указанным _id не найден', NOT_FOUND_ERROR_CODE));
         return;
       }
-      if (user._id !== req.user._id) {
+      if (user._id.toString() !== req.user._id.toString()) {
         next(new AppError('Нет прав для редактирования пользователя', FORBIDDEN_ERROR_CODE));
       }
       return res.send({ user });

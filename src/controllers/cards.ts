@@ -4,6 +4,7 @@ import {
   DEFAULT_ERROR_CODE, DEFAULT_ERROR_MESSAGE, FORBIDDEN_ERROR_CODE, INVALID_DATA_ERROR_CODE, NOT_FOUND_ERROR_CODE,
 } from '../shared';
 import Card from '../models/card';
+import { SUCCESS_CREATE_STATUS } from '../shared/success-codes';
 
 export const getCards = (req: Request, res: Response, next: NextFunction) => {
   Card.find({})
@@ -15,7 +16,7 @@ export const createCard = (req: Request, res: Response, next: NextFunction) => {
   const { name, link } = req.body;
 
   Card.create({ name, link, owner: req.user._id })
-    .then((card) => res.send({ card }))
+    .then((card) => res.status(SUCCESS_CREATE_STATUS).send({ card }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new AppError('Переданы некорректные данные при создании карточки', INVALID_DATA_ERROR_CODE));
@@ -31,7 +32,7 @@ export const deleteCard = (req: Request, res: Response, next: NextFunction) => {
         next(new AppError('Карточка с указанным _id не найдена', NOT_FOUND_ERROR_CODE));
         return;
       }
-      if (card.owner !== req.user._id) {
+      if (card.owner.toString() !== req.user._id.toString()) {
         next(new AppError('Нет прав для удаления этой карточки', FORBIDDEN_ERROR_CODE));
       }
       return res.send({ card });
